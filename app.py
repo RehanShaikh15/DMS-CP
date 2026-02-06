@@ -44,6 +44,12 @@ def admin_logout():
     flash("Logged out successfully", "info")
     return redirect(url_for("admin_login"))
 
+@app.route("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    """Redirect to main admin view"""
+    return redirect(url_for("faculty_list"))
+
 @app.route("/faculty/login", methods=["GET", "POST"])
 def faculty_login():
     form = FacultyLoginForm()
