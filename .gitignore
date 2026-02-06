@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+
+# Flask/SQLAlchemy instance folder (contains your college.db)
+instance/
+
+# Environment variables (to keep secrets safe)
+.env
+.flaskenv
+
+# OS generated files
+.DS_Store
+Thumbs.db
