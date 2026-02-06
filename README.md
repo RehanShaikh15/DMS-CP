@@ -124,31 +124,23 @@ flask --app app run --port 5001
 ## 📊 FEATURES
 
 ### ✅ Working Features:
-1. **Faculty Management**
-   - Add new faculty members
-   - Edit existing faculty
-   - Delete faculty
-   - View faculty details
+1. **Consolidated Admin Hub**
+   - **Academics Center**: Manage Departments, Subjects, Academic Classes, and Classrooms in one view.
+   - **Schedule Center**: Unified timetable management with Weekly Grid, Classroom View, and Daily Schedule.
+   - **HR Center**: Integrated Faculty Attendance and Leave Management.
 
-2. **Subject Assignment**
-   - Assign multiple subjects to faculty
-   - Track subjects by semester
-   - Unique constraint on faculty-subject-semester
+2. **Faculty Management**
+   - Comprehensive Faculty profiles (Subjects, Workload, Attendance)
+   - Add/Edit/Delete functionality with validation
 
-3. **Department Integration**
-   - Faculty linked to departments
-   - Department-wise organization
+3. **Faculty Portal**
+   - Personal Dashboard with Weekly Schedule
+   - Leave Application System
+   - Attendance History View
 
-4. **Form Validation**
-   - Email uniqueness check
-   - Phone number format validation
-   - Required field validation
-   - Proper error messages
-
-5. **User Interface**
-   - Bootstrap 5 responsive design
-   - Flash messages for user feedback
-   - Clean, professional layout
+4. **Security & Validation**
+   - Role-based Access Control (Admin/Faculty)
+   - Integrity Checks (No double-booking, conflict detection)ations
 
 ### 📋 Database Schema:
 

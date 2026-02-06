@@ -250,6 +250,12 @@ class Timetable(db.Model):
             "academic_class_id",
             name="uq_class_slot"
         ),
+        db.UniqueConstraint(
+            "day",
+            "start_time",
+            "classroom_id",
+            name="uq_classroom_slot"
+        ),
     )
 
 

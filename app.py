@@ -2,12 +2,12 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_bootstrap import Bootstrap5
 from sqlalchemy import or_
 from models import db, Faculty, Department,AcademicClass, Subject, FacultySubject, Admin, Timetable, FacultyAttendance, FacultyLeave, Classroom
-from forms import FacultyForm, populate_form_choices, AdminLoginForm, FacultyLoginForm, FacultySetPasswordForm, DepartmentForm, SubjectForm, AcademicClassForm, TimetableForm, AdminAttendanceFilterForm, FacultyLeaveForm, ClassroomForm
+from forms import FacultyForm, populate_form_choices, AdminLoginForm, FacultyLoginForm, FacultySetPasswordForm, DepartmentForm, SubjectForm, AcademicClassForm, TimetableForm, AdminAttendanceFilterForm, FacultyLeaveForm, ClassroomForm, ClassroomFilterForm, DailyScheduleForm
 from config import config
 from sqlalchemy.exc import IntegrityError
 from auth import admin_required
 from faculty_auth import faculty_required
-from datetime import time, datetime
+from datetime import time, datetime, date, timedelta
 import requests
 
 app = Flask(__name__)
@@ -277,133 +277,7 @@ def faculty_delete(id):
 
 
 
-@app.route("/departments", methods=["GET", "POST"])
-@admin_required
-def department_list():
-    form = DepartmentForm()
-    departments = Department.query.order_by(Department.name).all()
-
-    if form.validate_on_submit():
-        try:
-            department = Department(name=form.name.data.strip())
-            db.session.add(department)
-            db.session.commit()
-            flash("Department added successfully", "success")
-            return redirect(url_for("department_list"))
-        except IntegrityError:
-            db.session.rollback()
-            flash("Department already exists", "danger")
-
-    return render_template(
-        "department_list.html",
-        departments=departments,
-        form=form
-    )
-
-
-@app.route("/department/delete/<int:id>", methods=["POST"])
-@admin_required
-def department_delete(id):
-    department = Department.query.get_or_404(id)
-
-    if department.faculties:
-        flash("Cannot delete department: faculty assigned", "warning")
-        return redirect(url_for("department_list"))
-
-    db.session.delete(department)
-    db.session.commit()
-    flash("Department deleted successfully", "success")
-    return redirect(url_for("department_list"))
-
-
-@app.route("/admin/academic-classes", methods=["GET", "POST"])
-@admin_required
-def academic_class_manage():
-    form = AcademicClassForm()
-
-    # Populate department dropdown
-    form.department_id.choices = [
-        (d.id, d.name) for d in Department.query.all()
-    ]
-
-    # 🔹 ADD Academic Class
-    if form.validate_on_submit():
-        academic_class = AcademicClass(
-            name=form.name.data,
-            year=form.year.data,
-            department_id=form.department_id.data
-        )
-        db.session.add(academic_class)
-        db.session.commit()
-
-        flash("Academic Class added successfully", "success")
-        return redirect(url_for("academic_class_manage"))
-
-    if delete_id := request.args.get("delete"):
-        academic_class = AcademicClass.query.get_or_404(delete_id)
-
-        if academic_class.timetables:
-            flash("Cannot delete: class is used in timetable", "danger")
-        else:
-            db.session.delete(academic_class)
-            db.session.commit()
-            flash("Academic Class deleted", "success")
-
-        return redirect(url_for("academic_class_manage"))
-
-    # 🔹 LIST Academic Classes
-    classes = AcademicClass.query.order_by(
-        AcademicClass.year, AcademicClass.name
-    ).all()
-
-    return render_template(
-        "academic_class_manage.html",
-        form=form,
-        classes=classes
-    )
-
-
-
-@app.route("/subjects", methods=["GET", "POST"])
-@admin_required
-def subject_list():
-    form = SubjectForm()
-    subjects = Subject.query.order_by(Subject.subject_code).all()
-
-    if form.validate_on_submit():
-        try:
-            subject = Subject(
-                subject_code=form.subject_code.data.strip().upper(),
-                subject_name=form.subject_name.data.strip()
-            )
-            db.session.add(subject)
-            db.session.commit()
-            flash("Subject added successfully", "success")
-            return redirect(url_for("subject_list"))
-        except IntegrityError:
-            db.session.rollback()
-            flash("Subject code already exists", "danger")
-
-    return render_template(
-        "subject_list.html",
-        subjects=subjects,
-        form=form
-    )
-
-
-@app.route("/subject/delete/<int:id>", methods=["POST"])
-@admin_required
-def subject_delete(id):
-    subject = Subject.query.get_or_404(id)
-
-    if subject.faculty_assignments:
-        flash("Cannot delete subject: assigned to faculty", "warning")
-        return redirect(url_for("subject_list"))
-
-    db.session.delete(subject)
-    db.session.commit()
-    flash("Subject deleted successfully", "success")
-    return redirect(url_for("subject_list"))
+# Master Data Management Consolidated in /admin/academics
 
 
 @app.route("/faculty/dashboard")
@@ -439,89 +313,7 @@ def faculty_dashboard():
     )
 
 
-@app.route("/admin/timetable", methods=["GET", "POST"])
-@admin_required
-def timetable_manage():
-    form = TimetableForm()
 
-    # Department dropdown (always)
-    form.department_id.choices = [
-        (d.id, d.name) for d in Department.query.all()
-    ]
-
-    # Classroom dropdown (always available)
-    form.classroom_id.choices = [
-        (c.id, c.room_code) for c in Classroom.query.order_by(Classroom.room_code).all()
-    ]
-
-    # Populate dependent dropdowns
-    if request.method == "POST":
-        dept_id = form.department_id.data
-
-        form.faculty_id.choices = [
-            (f.id, f.name)
-            for f in Faculty.query.filter_by(department_id=dept_id).all()
-        ]
-
-        form.subject_id.choices = [
-            (s.id, s.subject_name)
-            for s in Subject.query
-            .join(FacultySubject)
-            .join(Faculty)
-            .filter(Faculty.department_id == dept_id)
-            .distinct()
-            .all()
-        ]
-
-        form.academic_class_id.choices = [
-            (c.id, c.name)
-            for c in AcademicClass.query.filter_by(department_id=dept_id).all()
-        ]
-
-    else:
-        form.faculty_id.choices = []
-        form.subject_id.choices = []
-        form.academic_class_id.choices = []
-
-    # ---------- SAVE SLOT ----------
-    if form.validate_on_submit():
-
-        h, m = map(int, form.start_time.data.split(":"))
-
-        slot = Timetable(
-            faculty_id=form.faculty_id.data,
-            subject_id=form.subject_id.data,
-            academic_class_id=form.academic_class_id.data,
-            classroom_id=form.classroom_id.data,  # ✅ NEW
-            day=form.day.data,
-            start_time=time(h, m),
-            end_time=time(h + 1, m)
-        )
-
-        db.session.add(slot)
-        db.session.commit()
-
-        flash("Timetable slot added", "success")
-        return redirect(url_for("timetable_manage"))
-
-    # ---------- WEEKLY GRID ----------
-    DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-    TIMES = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00"]
-
-    grid = {d: {t: None for t in TIMES} for d in DAYS}
-
-    for slot in Timetable.query.all():
-        t = slot.start_time.strftime("%H:%M")
-        if t in TIMES:
-            grid[slot.day][t] = slot
-
-    return render_template(
-        "timetable_manage.html",
-        form=form,
-        grid=grid,
-        days=DAYS,
-        times=TIMES
-    )
 
 @app.route("/api/department/<int:dept_id>/data")
 @admin_required
@@ -546,39 +338,7 @@ def department_data(dept_id):
     }
 
 
-@app.route("/admin/attendance", methods=["GET", "POST"])
-@admin_required
-def faculty_attendance_manage():
-    form = AdminAttendanceFilterForm()
 
-    form.department_id.choices = [
-        (d.id, d.name) for d in Department.query.all()
-    ]
-
-    faculty = []
-    existing = {}
-
-    if form.validate_on_submit():
-        dept_id = form.department_id.data
-        selected_date = form.date.data
-
-        faculty = Faculty.query.filter_by(
-            department_id=dept_id
-        ).all()
-
-        records = FacultyAttendance.query.filter(
-            FacultyAttendance.date == selected_date,
-            FacultyAttendance.faculty_id.in_([f.id for f in faculty])
-        ).all()
-
-        existing = {r.faculty_id: r for r in records}
-
-    return render_template(
-        "attendance.html",
-        form=form,
-        faculty=faculty,
-        existing=existing
-    )
 
 
 @app.route("/admin/attendance/save", methods=["POST"])
@@ -599,6 +359,21 @@ def save_attendance():
 
         faculty_id = int(key.split("_")[1])
 
+        # Check for approved leaves
+        existing_leave = FacultyLeave.query.filter(
+            FacultyLeave.faculty_id == faculty_id,
+            FacultyLeave.status == "Approved",
+            FacultyLeave.start_date <= selected_date,
+            FacultyLeave.end_date >= selected_date
+        ).first()
+
+        if existing_leave:
+            # If on leave, force status to 'Leave' or skip
+            # Ideally, we warn the user, but for bulk save we might just enforce consistency
+            if value == "Present":
+                 flash(f"Warning: Faculty {faculty_id} is on approved leave. Marked as 'Leave'.", "warning")
+                 value = "Leave"
+
         # Use the date object for the query and the new record
         if record := FacultyAttendance.query.filter_by(
                 faculty_id=faculty_id, date=selected_date
@@ -613,7 +388,7 @@ def save_attendance():
 
     db.session.commit()
     flash("Attendance saved successfully", "success")
-    return redirect(url_for("faculty_attendance_manage"))
+    return redirect(url_for("admin_hr", tab="attendance"))
 
 @app.route("/faculty/attendance")
 @faculty_required
@@ -663,17 +438,7 @@ def faculty_my_leaves():
         leaves=leaves
     )
 
-@app.route("/admin/leaves")
-@admin_required
-def admin_leaves():
-    leaves = FacultyLeave.query.order_by(
-        FacultyLeave.applied_at.desc()
-    ).all()
 
-    return render_template(
-        "leaves.html",
-        leaves=leaves
-    )
 
 @app.route("/admin/leave/<int:leave_id>/approve")
 @admin_required
@@ -688,7 +453,7 @@ def approve_leave(leave_id):
     db.session.commit()
 
     flash("Leave approved successfully", "success")
-    return redirect(url_for("admin_leaves"))
+    return redirect(url_for("admin_hr", tab="leaves"))
 
 
 @app.route("/admin/leave/<int:leave_id>/reject")
@@ -704,42 +469,336 @@ def reject_leave(leave_id):
     db.session.commit()
 
     flash("Leave rejected", "danger")
-    return redirect(url_for("admin_leaves"))
+    return redirect(url_for("admin_hr", tab="leaves"))
 
 
-@app.route("/admin/classrooms", methods=["GET", "POST"])
+
+
+
+
+
+
+
+@app.route("/admin/academics", methods=["GET", "POST"])
 @admin_required
-def classroom_manage():
-    form = ClassroomForm()
-    classrooms = Classroom.query.order_by(Classroom.room_code).all()
+def admin_academics():
+    """Unified dashboard for Master Data"""
+    # Active Tab Logic
+    active_tab = request.args.get('tab', 'departments') # Default to departments
 
-    if form.validate_on_submit():
-        classroom = Classroom(
-            room_code=form.room_code.data.upper(),
-            room_type=form.room_type.data,
-            capacity=form.capacity.data
-        )
-        db.session.add(classroom)
-        db.session.commit()
-        flash("Classroom added successfully", "success")
-        return redirect(url_for("classroom_manage"))
+    # Forms
+    dept_form = DepartmentForm()
+    subject_form = SubjectForm()
+    class_form = AcademicClassForm()
+    room_form = ClassroomForm()
 
-    if delete_id := request.args.get("delete"):
-        classroom = Classroom.query.get_or_404(delete_id)
+    # Populate choices for Class Form
+    class_form.department_id.choices = [
+        (d.id, d.name) for d in Department.query.all()
+    ]
 
-        if classroom.timetables:
-            flash("Cannot delete: classroom used in timetable", "danger")
-        else:
-            db.session.delete(classroom)
+    # --- HANDLE SUBMISSIONS ---
+    # We check which form was submitted based on the active tab or submit button
+    
+    # 1. Departments
+    if active_tab == 'departments' and dept_form.validate_on_submit():
+        try:
+            department = Department(name=dept_form.name.data.strip())
+            db.session.add(department)
             db.session.commit()
-            flash("Classroom deleted", "success")
+            flash("Department added successfully", "success")
+            return redirect(url_for("admin_academics", tab='departments'))
+        except IntegrityError:
+            db.session.rollback()
+            flash("Department already exists", "danger")
 
-        return redirect(url_for("classroom_manage"))
+    # 2. Subjects
+    if active_tab == 'subjects' and subject_form.validate_on_submit():
+        try:
+            subject = Subject(
+                subject_code=subject_form.subject_code.data.strip().upper(),
+                subject_name=subject_form.subject_name.data.strip()
+            )
+            db.session.add(subject)
+            db.session.commit()
+            flash("Subject added successfully", "success")
+            return redirect(url_for("admin_academics", tab='subjects'))
+        except IntegrityError:
+            db.session.rollback()
+            flash("Subject code already exists", "danger")
+
+    # 3. Academic Classes
+    if active_tab == 'classes' and class_form.validate_on_submit():
+        try:
+             # Logic from old academic_class_manage
+            academic_class = AcademicClass(
+                name=class_form.name.data,
+                year=class_form.year.data,
+                department_id=class_form.department_id.data
+            )
+            db.session.add(academic_class)
+            db.session.commit()
+            flash("Academic Class added successfully", "success")
+            return redirect(url_for("admin_academics", tab='classes'))
+        except IntegrityError:
+             db.session.rollback()
+             flash("Class name must be unique", "danger")
+
+    # 4. Classrooms
+    if active_tab == 'classrooms' and room_form.validate_on_submit():
+        try:
+            classroom = Classroom(
+                room_code=room_form.room_code.data.upper(),
+                room_type=room_form.room_type.data,
+                capacity=room_form.capacity.data
+            )
+            db.session.add(classroom)
+            db.session.commit()
+            flash("Classroom added successfully", "success")
+            return redirect(url_for("admin_academics", tab='classrooms'))
+        except IntegrityError:
+             db.session.rollback()
+             flash("Room code already exists", "danger")
+
+    # --- FETCH DATA FOR RENDERING ---
+    departments = Department.query.order_by(Department.name).all()
+    subjects = Subject.query.order_by(Subject.subject_code).all()
+    classes = AcademicClass.query.order_by(AcademicClass.year, AcademicClass.name).all()
+    classrooms = Classroom.query.order_by(Classroom.room_code).all()
+    
+    # --- HANDLE DELETE ---
+    if delete_id := request.args.get("delete"):
+        delete_id = int(delete_id)
+        
+        if active_tab == 'departments':
+            dept = Department.query.get_or_404(delete_id)
+            if dept.academic_classes or dept.faculties:
+                flash("Cannot delete Department linked to Classes or Faculty", "danger")
+            else:
+                db.session.delete(dept)
+                db.session.commit()
+                flash("Department deleted", "success")
+                return redirect(url_for('admin_academics', tab='departments'))
+
+        elif active_tab == 'subjects':
+            subj = Subject.query.get_or_404(delete_id)
+            if subj.timetables or subj.faculty_allocations:
+                 flash("Cannot delete Subject linked to Timetable/Faculty", "danger")
+            else:
+                db.session.delete(subj)
+                db.session.commit()
+                flash("Subject deleted", "success")
+                return redirect(url_for('admin_academics', tab='subjects'))
+
+        elif active_tab == 'classes':
+             cls = AcademicClass.query.get_or_404(delete_id)
+             if cls.timetables:
+                 flash("Cannot delete Class linked to Timetable", "danger")
+             else:
+                 db.session.delete(cls)
+                 db.session.commit()
+                 flash("Academic Class deleted", "success")
+                 return redirect(url_for('admin_academics', tab='classes'))
+
+        elif active_tab == 'classrooms':
+            room = Classroom.query.get_or_404(delete_id)
+            if room.timetables:
+                flash("Cannot delete Classroom linked to Timetable", "danger")
+            else:
+                db.session.delete(room)
+                db.session.commit()
+                flash("Classroom deleted", "success")
+                return redirect(url_for('admin_academics', tab='classrooms'))
 
     return render_template(
-        "classroom_manage.html",
-        form=form,
+        "admin_academics.html",
+        active_tab=active_tab,
+        dept_form=dept_form,
+        subject_form=subject_form,
+        class_form=class_form,
+        room_form=room_form,
+        departments=departments,
+        subjects=subjects,
+        classes=classes,
         classrooms=classrooms
+    )
+
+
+    return render_template(
+        "admin_academics.html",
+        active_tab=active_tab,
+        dept_form=dept_form,
+        subject_form=subject_form,
+        class_form=class_form,
+        room_form=room_form,
+        departments=departments,
+        subjects=subjects,
+        classes=classes,
+        classrooms=classrooms
+    )
+
+@app.route("/admin/schedule", methods=["GET", "POST"])
+@admin_required
+def admin_schedule():
+    """Unified Schedule Center"""
+    active_tab = request.args.get('tab', 'manage')
+    
+    # --- FORMS ---
+    manage_form = TimetableForm()
+    classroom_form = ClassroomFilterForm()
+    daily_form = DailyScheduleForm()
+
+    # Populate choices for Timetable Manage
+    manage_form.department_id.choices = [(d.id, d.name) for d in Department.query.all()]
+    manage_form.faculty_id.choices = [(f.id, f.name) for f in Faculty.query.all()]
+    manage_form.subject_id.choices = [(s.id, s.subject_name) for s in Subject.query.all()]
+    manage_form.academic_class_id.choices = [(c.id, c.name) for c in AcademicClass.query.all()]
+    manage_form.classroom_id.choices = [(c.id, c.room_code) for c in Classroom.query.all()]
+    
+    # Populate choices for Classroom Filter
+    classroom_form.classroom_id.choices = [(c.id, c.room_code) for c in Classroom.query.order_by(Classroom.room_code).all()]
+
+    # --- DATA & LOGIC ---
+    DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    TIMES = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00"]
+    
+    # 1. MANAGE TAB (Weekly Grid)
+    manage_grid = {d: {t: None for t in TIMES} for d in DAYS}
+    all_slots = Timetable.query.all()
+    for slot in all_slots:
+        t = slot.start_time.strftime("%H:%M")
+        if t in TIMES:
+            manage_grid[slot.day][t] = slot
+
+    if active_tab == 'manage' and manage_form.validate_on_submit():
+        try:
+             # Basic Time Object
+            start_dt = datetime.strptime(manage_form.start_time.data, "%H:%M").time()
+            end_dt = (datetime.combine(date.today(), start_dt) + timedelta(hours=1)).time()
+            
+            # Check Faculty Conflict
+            if Timetable.query.filter_by(
+                day=manage_form.day.data,
+                start_time=start_dt,
+                faculty_id=manage_form.faculty_id.data
+            ).first():
+                 flash("Faculty is already booked at this time!", "danger")
+                 return redirect(url_for('admin_schedule', tab='manage'))
+
+            # Check Class Conflict
+            if Timetable.query.filter_by(
+                day=manage_form.day.data,
+                start_time=start_dt,
+                academic_class_id=manage_form.academic_class_id.data
+            ).first():
+                 flash("Class is already booked at this time!", "danger")
+                 return redirect(url_for('admin_schedule', tab='manage'))
+
+            # Create Slot
+            slot = Timetable(
+                day=manage_form.day.data,
+                start_time=start_dt,
+                end_time=end_dt,
+                faculty_id=manage_form.faculty_id.data,
+                subject_id=manage_form.subject_id.data,
+                academic_class_id=manage_form.academic_class_id.data,
+                classroom_id=manage_form.classroom_id.data
+            )
+            db.session.add(slot)
+            db.session.commit()
+            flash("Timetable slot added successfully", "success")
+            return redirect(url_for('admin_schedule', tab='manage'))
+
+        except IntegrityError:
+            db.session.rollback()
+            flash("Error: Classroom Double Booking Detected!", "danger")
+    
+    # 2. CLASSROOM TAB
+    classroom_grid = {d: {t: None for t in TIMES} for d in DAYS}
+    selected_classroom = None
+    
+    if active_tab == 'classroom' and classroom_form.validate_on_submit():
+        c_id = classroom_form.classroom_id.data
+        selected_classroom = Classroom.query.get(c_id)
+        c_slots = Timetable.query.filter_by(classroom_id=c_id).all()
+        for slot in c_slots:
+            t = slot.start_time.strftime("%H:%M")
+            if t in TIMES:
+                classroom_grid[slot.day][t] = slot
+    
+    # 3. DAILY TAB
+    daily_schedule_data = []
+    selected_date = date.today()
+    day_name = selected_date.strftime("%A")
+
+    if active_tab == 'daily' and daily_form.validate_on_submit():
+        selected_date = daily_form.date.data
+        day_name = selected_date.strftime("%A")
+        
+        d_slots = Timetable.query.filter_by(day=day_name).order_by(Timetable.start_time).all()
+        leaves = FacultyLeave.query.filter(
+            FacultyLeave.status == "Approved",
+            FacultyLeave.start_date <= selected_date,
+            FacultyLeave.end_date >= selected_date
+        ).all()
+        leave_ids = {l.faculty_id for l in leaves}
+        
+        for slot in d_slots:
+            daily_schedule_data.append({
+                "slot": slot,
+                "is_blocked": slot.faculty_id in leave_ids
+            })
+
+    return render_template(
+        "admin_schedule.html",
+        active_tab=active_tab,
+        manage_form=manage_form,
+        classroom_form=classroom_form,
+        daily_form=daily_form,
+        manage_grid=manage_grid,
+        classroom_grid=classroom_grid,
+        selected_classroom=selected_classroom,
+        daily_schedule_data=daily_schedule_data,
+        selected_date=selected_date,
+        day_name=day_name,
+        days=DAYS,
+        times=TIMES
+    )
+
+
+@app.route("/admin/hr", methods=["GET", "POST"])
+@admin_required
+def admin_hr():
+    active_tab = request.args.get('tab', 'attendance')
+    
+    # --- TAB 1: ATTENDANCE ---
+    attendance_form = AdminAttendanceFilterForm()
+    attendance_form.department_id.choices = [(d.id, d.name) for d in Department.query.all()]
+    
+    faculty_list = []
+    existing_attendance = {}
+
+    if active_tab == 'attendance' and attendance_form.validate_on_submit():
+        dept_id = attendance_form.department_id.data
+        selected_date = attendance_form.date.data
+        
+        faculty_list = Faculty.query.filter_by(department_id=dept_id).all()
+        records = FacultyAttendance.query.filter(
+            FacultyAttendance.date == selected_date,
+            FacultyAttendance.faculty_id.in_([f.id for f in faculty_list])
+        ).all()
+        existing_attendance = {r.faculty_id: r for r in records}
+
+    # --- TAB 2: LEAVES ---
+    leaves = FacultyLeave.query.order_by(FacultyLeave.applied_at.desc()).all()
+
+    return render_template(
+        "admin_faculty_hr.html",
+        active_tab=active_tab,
+        attendance_form=attendance_form,
+        faculty_list=faculty_list,
+        existing_attendance=existing_attendance,
+        leaves=leaves
     )
 
 
@@ -759,6 +818,8 @@ def create_admin():
     db.session.commit()
     print("Admin created successfully")
 
+
+# --- API ENDPOINTS (React Integration) ---
 
 # Database initialization commands
 @app.cli.command()

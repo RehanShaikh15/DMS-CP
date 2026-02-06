@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,25 +9,24 @@
     {{ bootstrap.load_css() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
 </head>
+
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('index') }}">
-            <strong>Faculty Management System</strong>
-        </a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <strong>Faculty Management System</strong>
+            </a>
 
-        <button class="navbar-toggler" type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
 
-                {# ================= ADMIN ================= #}
-                {% if is_admin %}
+                    {# ================= ADMIN ================= #}
+                    {% if is_admin %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('faculty_list') }}">
                             Faculty
@@ -34,101 +34,71 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('department_list') }}">
-                            Departments
+                        <a class="nav-link" href="{{ url_for('admin_academics') }}">
+                            Academics Setup
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('subject_list') }}">
-                            Subjects
+                        <a class="nav-link" href="{{ url_for('admin_schedule') }}">
+                            Schedule Center
                         </a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('academic_class_manage') }}">
-                            Academic Classes
+                        <a class="nav-link" href="{{ url_for('admin_hr') }}">
+                            Faculty HR
                         </a>
                     </li>
-                <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('classroom_manage') }}">
-        Classrooms
-    </a>
-</li>
-
-                    <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('timetable_manage') }}">
-        Timetable
-    </a>
-</li>
-                <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('faculty_attendance_manage') }}">
-        Faculty Attendance
-    </a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" href="{{ url_for('admin_leaves') }}">
-        Faculty Leaves
-    </a>
-</li>
 
 
 
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle"
-                           href="#"
-                           role="button"
-                           data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             {{ admin_username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a class="dropdown-item text-danger"
-                                   href="{{ url_for('admin_logout') }}">
+                                <a class="dropdown-item text-danger" href="{{ url_for('admin_logout') }}">
                                     Logout
                                 </a>
                             </li>
                         </ul>
                     </li>
 
-                {# ================= FACULTY ================= #}
-                {% elif is_faculty %}
-    <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('faculty_dashboard') }}">
-            Dashboard
-        </a>
-    </li>
-                <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('faculty_my_leaves') }}">
-        My Leaves
-    </a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" href="{{ url_for('faculty_apply_leave') }}">
-        Apply Leave
-    </a>
-</li>
+                    {# ================= FACULTY ================= #}
+                    {% elif is_faculty %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('faculty_dashboard') }}">
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('faculty_my_leaves') }}">
+                            My Leaves
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('faculty_apply_leave') }}">
+                            Apply Leave
+                        </a>
+                    </li>
 
 
-    <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle"
-           href="#"
-           role="button"
-           data-bs-toggle="dropdown">
-            {{ faculty_name }}
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-                <a class="dropdown-item text-danger"
-                   href="{{ url_for('faculty_logout') }}">
-                    Logout
-                </a>
-            </li>
-        </ul>
-    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            {{ faculty_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('faculty_logout') }}">
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
 
-                {# ================= GUEST ================= #}
-                {% else %}
+                    {# ================= GUEST ================= #}
+                    {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin_login') }}">
                             Admin Login
@@ -139,32 +109,33 @@
                             Faculty Login
                         </a>
                     </li>
-                {% endif %}
+                    {% endif %}
 
-            </ul>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<div class="container">
+    <div class="container">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
         {% endif %}
-    {% endwith %}
+        {% endwith %}
 
-    {% block content %}{% endblock %}
+        {% block content %}{% endblock %}
 
-</div>
+    </div>
 
-{{ bootstrap.load_js() }}
-{% block scripts %}{% endblock %}
+    {{ bootstrap.load_js() }}
+    {% block scripts %}{% endblock %}
 
 </body>
+
 </html>

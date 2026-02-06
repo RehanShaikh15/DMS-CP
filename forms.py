@@ -263,6 +263,22 @@ class ClassroomForm(FlaskForm):
 
     submit = SubmitField("Save Classroom")
 
+class ClassroomFilterForm(FlaskForm):
+    classroom_id = SelectField(
+        "Select Classroom",
+        coerce=int,
+        validators=[DataRequired()]
+    )
+    submit = SubmitField("View Timetable")
+
+class DailyScheduleForm(FlaskForm):
+    date = DateField(
+        "Select Date",
+        default=date.today,
+        validators=[DataRequired()]
+    )
+    submit = SubmitField("View Schedule")
+
 def populate_form_choices():
     """Helper function to populate dynamic choices"""
     departments = Department.query.all()

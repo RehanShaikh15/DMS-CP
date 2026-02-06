@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="mb-4">Academics Setup</h2>
+
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'departments' %}active{% endif %}" id="pills-dept-tab"
+                    data-bs-toggle="pill" data-bs-target="#pills-dept" type="button" role="tab">Departments</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'subjects' %}active{% endif %}" id="pills-subject-tab"
+                    data-bs-toggle="pill" data-bs-target="#pills-subject" type="button" role="tab">Subjects</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'classes' %}active{% endif %}" id="pills-class-tab"
+                    data-bs-toggle="pill" data-bs-target="#pills-class" type="button" role="tab">Academic
+                    Classes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'classrooms' %}active{% endif %}" id="pills-room-tab"
+                    data-bs-toggle="pill" data-bs-target="#pills-room" type="button" role="tab">Classrooms</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="pills-tabContent">
+
+            {# ================= TAB 1: DEPARTMENTS ================= #}
+            <div class="tab-pane fade {% if active_tab == 'departments' %}show active{% endif %}" id="pills-dept"
+                role="tabpanel">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h5>Add Department</h5>
+                        <form method="POST" action="{{ url_for('admin_academics', tab='departments') }}"
+                            class="row g-3 align-items-end mb-4">
+                            {{ dept_form.hidden_tag() }}
+                            <div class="col-md-5">
+                                {{ dept_form.name.label(class="form-label") }}
+                                {{ dept_form.name(class="form-control") }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ dept_form.submit(class="btn btn-primary w-100") }}
+                            </div>
+                        </form>
+
+                        <hr>
+                        <h6>Existing Departments</h6>
+                        <ul class="list-group">
+                            {% for d in departments %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ d.name }}
+                                <form action="{{ url_for('admin_academics', tab='departments', delete=d.id) }}"
+                                    method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Are you sure?')">Delete</button>
+                                </form>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {# ================= TAB 2: SUBJECTS ================= #}
+            <div class="tab-pane fade {% if active_tab == 'subjects' %}show active{% endif %}" id="pills-subject"
+                role="tabpanel">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h5>Add Subject</h5>
+                        <form method="POST" action="{{ url_for('admin_academics', tab='subjects') }}"
+                            class="row g-3 align-items-end mb-4">
+                            {{ subject_form.hidden_tag() }}
+                            <div class="col-md-3">
+                                {{ subject_form.subject_code.label(class="form-label") }}
+                                {{ subject_form.subject_code(class="form-control") }}
+                            </div>
+                            <div class="col-md-5">
+                                {{ subject_form.subject_name.label(class="form-label") }}
+                                {{ subject_form.subject_name(class="form-control") }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ subject_form.submit(class="btn btn-primary w-100") }}
+                            </div>
+                        </form>
+
+                        <hr>
+                        <h6>Existing Subjects</h6>
+                        <div class="table-responsive" style="max-height: 400px; overflow-y:auto;">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in subjects %}
+                                    <tr>
+                                        <td>{{ s.subject_code }}</td>
+                                        <td>{{ s.subject_name }}</td>
+                                        <td>
+                                            <form action="{{ url_for('admin_academics', tab='subjects', delete=s.id) }}"
+                                                method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0"
+                                                    onclick="return confirm('Are you sure?')">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ================= TAB 3: ACADEMIC CLASSES ================= #}
+            <div class="tab-pane fade {% if active_tab == 'classes' %}show active{% endif %}" id="pills-class"
+                role="tabpanel">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h5>Add Academic Class</h5>
+                        <form method="POST" action="{{ url_for('admin_academics', tab='classes') }}"
+                            class="row g-3 align-items-end mb-4">
+                            {{ class_form.hidden_tag() }}
+                            <div class="col-md-4">
+                                {{ class_form.name.label(class="form-label") }}
+                                {{ class_form.name(class="form-control") }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ class_form.year.label(class="form-label") }}
+                                {{ class_form.year(class="form-select") }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ class_form.department_id.label(class="form-label") }}
+                                {{ class_form.department_id(class="form-select") }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ class_form.submit(class="btn btn-primary w-100") }}
+                            </div>
+                        </form>
+
+                        <hr>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Year</th>
+                                        <th>Department</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in classes %}
+                                    <tr>
+                                        <td>{{ c.name }}</td>
+                                        <td>{{ c.year }}</td>
+                                        <td>{{ c.department.name }}</td>
+                                        <td>
+                                            <form action="{{ url_for('admin_academics', tab='classes', delete=c.id) }}"
+                                                method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0"
+                                                    onclick="return confirm('Are you sure?')">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ================= TAB 4: CLASSROOMS ================= #}
+            <div class="tab-pane fade {% if active_tab == 'classrooms' %}show active{% endif %}" id="pills-room"
+                role="tabpanel">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h5>Add Classroom</h5>
+                        <form method="POST" action="{{ url_for('admin_academics', tab='classrooms') }}"
+                            class="row g-3 align-items-end mb-4">
+                            {{ room_form.hidden_tag() }}
+                            <div class="col-md-3">
+                                {{ room_form.room_code.label(class="form-label") }}
+                                {{ room_form.room_code(class="form-control") }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ room_form.room_type.label(class="form-label") }}
+                                {{ room_form.room_type(class="form-select") }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ room_form.capacity.label(class="form-label") }}
+                                {{ room_form.capacity(class="form-control") }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ room_form.submit(class="btn btn-primary w-100") }}
+                            </div>
+                        </form>
+
+                        <hr>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Type</th>
+                                        <th>Capacity</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for r in classrooms %}
+                                    <tr>
+                                        <td>{{ r.room_code }}</td>
+                                        <td>{{ r.room_type }}</td>
+                                        <td>{{ r.capacity }}</td>
+                                        <td>
+                                            <form
+                                                action="{{ url_for('admin_academics', tab='classrooms', delete=r.id) }}"
+                                                method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0"
+                                                    onclick="return confirm('Are you sure?')">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
