@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty List - FMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Faculty Members</h2>
+    <a href="{{ url_for('faculty_add') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add New Faculty
+    </a>
+</div>
+
+{% if faculty_data %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Experience</th>
+                <th>Subjects</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in faculty_data %}
+            <tr>
+                <td>{{ data.faculty.id }}</td>
+                <td>{{ data.faculty.name }}</td>
+                <td>{{ data.faculty.email }}</td>
+                <td>{{ data.faculty.department.name }}</td>
+                <td>{{ data.faculty.designation }}</td>
+                <td>{{ data.faculty.experience_years }} years</td>
+                <td>
+                    <span class="badge bg-info">{{ data.subject_count }} subjects</span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="{{ url_for('faculty_view', id=data.faculty.id) }}" 
+                           class="btn btn-info" title="View">
+                            View
+                        </a>
+                        <a href="{{ url_for('faculty_edit', id=data.faculty.id) }}" 
+                           class="btn btn-warning" title="Edit">
+                            Edit
+                        </a>
+                        <form method="POST" action="{{ url_for('faculty_delete', id=data.faculty.id) }}" 
+                              style="display: inline;"
+                              onsubmit="return confirm('Are you sure you want to delete {{ data.faculty.name }}?');">
+                            <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <h4 class="alert-heading">No Faculty Members Found</h4>
+    <p>Get started by adding your first faculty member.</p>
+    <hr>
+    <a href="{{ url_for('faculty_add') }}" class="btn btn-primary">Add Faculty</a>
+</div>
+{% endif %}
+{% endblock %}

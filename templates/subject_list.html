@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Subjects{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">Subjects</h4>
+
+<form method="POST" class="row g-2 mb-4">
+    {{ form.hidden_tag() }}
+    <div class="col-md-4">
+        {{ form.subject_code(class="form-control", placeholder="Code") }}
+    </div>
+    <div class="col-md-5">
+        {{ form.subject_name(class="form-control", placeholder="Subject name") }}
+    </div>
+    <div class="col-md-3">
+        {{ form.submit(class="btn btn-success w-100") }}
+    </div>
+</form>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-light">
+        <tr>
+            <th>#</th>
+            <th>Code</th>
+            <th>Subject Name</th>
+            <th width="120">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sub in subjects %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ sub.subject_code }}</td>
+            <td>{{ sub.subject_name }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('subject_delete', id=sub.id) }}">
+                    <button class="btn btn-danger btn-sm"
+                            onclick="return confirm('Delete this subject?')">
+                        Delete
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4" class="text-center">No subjects found</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

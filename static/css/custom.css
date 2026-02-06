@@ -1,0 +1,38 @@
+/* Custom styles for Faculty Management System */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.btn-group-sm > .btn {
+    margin: 0 2px;
+}
+
+.navbar-brand strong {
+    font-size: 1.3rem;
+}
+
+.alert {
+    border-radius: 8px;
+}
+
+.form-check {
+    padding: 8px 0;
+}
+
+.form-check:hover {
+    background-color: #f8f9fa;
+}

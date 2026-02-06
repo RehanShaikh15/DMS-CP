@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Assign Timetable</h3>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+
+    {{ form.faculty_id.label }} {{ form.faculty_id(class="form-control") }}
+    {{ form.subject_id.label }} {{ form.subject_id(class="form-control") }}
+    {{ form.academic_class_id.label }} {{ form.academic_class_id(class="form-control") }}
+
+    {{ form.day.label }} {{ form.day(class="form-control") }}
+    {{ form.start_time.label }} {{ form.start_time(class="form-control") }}
+    {{ form.end_time.label }} {{ form.end_time(class="form-control") }}
+
+    <button class="btn btn-primary mt-3">Assign</button>
+</form>
+
+{% endblock %}
