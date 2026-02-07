@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}Academics Setup - FMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid pb-5">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                {% if is_archived %}
+                <i class="fas fa-archive me-2"></i>Archived Academics
+                {% else %}
+                <i class="fas fa-layer-group me-2"></i>Academics Setup
+                {% endif %}
+            </h2>
+            <p class="text-muted mb-0">Manage departments, subjects, classes, and classrooms.</p>
+        </div>
+
+        <div>
+            {% if is_archived %}
+            <a href="{{ url_for('admin.admin_academics', tab=active_tab) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Active
+            </a>
+            {% else %}
+            <a href="{{ url_for('admin.admin_academics_archived', tab=active_tab) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-archive me-2"></i>View Archived
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- TABS NAV -->
+    <ul class="nav nav-pills mb-4 d-flex justify-content-start gap-2" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'departments' %}active{% endif %}" id="pills-dept-tab"
+                data-bs-toggle="pill" data-bs-target="#pills-dept" type="button" role="tab">
+                <i class="fas fa-building me-2"></i>Departments
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'subjects' %}active{% endif %}" id="pills-subject-tab"
+                data-bs-toggle="pill" data-bs-target="#pills-subject" type="button" role="tab">
+                <i class="fas fa-book me-2"></i>Subjects
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'classes' %}active{% endif %}" id="pills-class-tab"
+                data-bs-toggle="pill" data-bs-target="#pills-class" type="button" role="tab">
+                <i class="fas fa-user-graduate me-2"></i>Classes
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'classrooms' %}active{% endif %}" id="pills-room-tab"
+                data-bs-toggle="pill" data-bs-target="#pills-room" type="button" role="tab">
+                <i class="fas fa-door-closed me-2"></i>Classrooms
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+
+        {# ================= TAB 1: DEPARTMENTS ================= #}
+        <div class="tab-pane fade {% if active_tab == 'departments' %}show active{% endif %}" id="pills-dept"
+            role="tabpanel">
+            <div class="row g-4">
+                {% if not is_archived %}
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-light fw-bold text-primary">
+                            Add Department
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin.admin_academics', tab='departments') }}">
+                                {{ dept_form.hidden_tag() }}
+                                <div class="mb-3">
+                                    {{ dept_form.name.label(class="form-label text-muted small fw-bold") }}
+                                    {{ dept_form.name(class="form-control") }}
+                                </div>
+                                {{ dept_form.submit(class="btn btn-primary w-100") }}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="col-md-{% if is_archived %}12{% else %}8{% endif %}">
+                    <div class="card shadow border-0 h-100">
+                        <div class="card-header bg-white border-bottom fw-bold">
+                            Existing Departments
+                        </div>
+                        <div class="list-group list-group-flush">
+                            {% for d in departments %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="fw-medium">{{ d.name }}</span>
+                                <div>
+                                    {% if is_archived %}
+                                    <form action="{{ url_for('admin.restore_academic', type='department', id=d.id) }}"
+                                        method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Restore">
+                                            <i class="fas fa-undo me-1"></i>Restore
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="badge bg-light text-muted me-2 border">{{ d.faculties|length }}
+                                        Faculty</span>
+                                    <form
+                                        action="{{ url_for('admin.admin_academics', tab='departments', delete=d.id) }}"
+                                        method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Are you sure?')" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="list-group-item text-center text-muted py-3">No departments found.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ================= TAB 2: SUBJECTS ================= #}
+        <div class="tab-pane fade {% if active_tab == 'subjects' %}show active{% endif %}" id="pills-subject"
+            role="tabpanel">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    {% if not is_archived %}
+                    <form method="POST" action="{{ url_for('admin.admin_academics', tab='subjects') }}"
+                        class="row g-3 align-items-end mb-4 border-bottom pb-4">
+                        {{ subject_form.hidden_tag() }}
+                        <div class="col-md-3">
+                            {{ subject_form.subject_code.label(class="form-label text-muted small fw-bold") }}
+                            {{ subject_form.subject_code(class="form-control", placeholder="e.g. CSE101") }}
+                        </div>
+                        <div class="col-md-5">
+                            {{ subject_form.subject_name.label(class="form-label text-muted small fw-bold") }}
+                            {{ subject_form.subject_name(class="form-control", placeholder="e.g. Intro to Programming")
+                            }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ subject_form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </form>
+                    {% endif %}
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Subject Name</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in subjects %}
+                                <tr>
+                                    <td><span class="badge bg-light text-dark border">{{ s.subject_code }}</span></td>
+                                    <td class="fw-medium">{{ s.subject_name }}</td>
+                                    <td class="text-end">
+                                        {% if is_archived %}
+                                        <form action="{{ url_for('admin.restore_academic', type='subject', id=s.id) }}"
+                                            method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-success"
+                                                title="Restore"><i class="fas fa-undo"></i></button>
+                                        </form>
+                                        {% else %}
+                                        <form
+                                            action="{{ url_for('admin.admin_academics', tab='subjects', delete=s.id) }}"
+                                            method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-light text-danger"
+                                                onclick="return confirm('Are you sure?')" title="Delete"><i
+                                                    class="fas fa-trash-alt"></i></button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No subjects found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ================= TAB 3: ACADEMIC CLASSES ================= #}
+        <div class="tab-pane fade {% if active_tab == 'classes' %}show active{% endif %}" id="pills-class"
+            role="tabpanel">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    {% if not is_archived %}
+                    <form method="POST" action="{{ url_for('admin.admin_academics', tab='classes') }}"
+                        class="row g-3 align-items-end mb-4 border-bottom pb-4">
+                        {{ class_form.hidden_tag() }}
+                        <div class="col-md-4">
+                            {{ class_form.name.label(class="form-label text-muted small fw-bold") }}
+                            {{ class_form.name(class="form-control", placeholder="e.g. FY-CSE-A") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ class_form.year.label(class="form-label text-muted small fw-bold") }}
+                            {{ class_form.year(class="form-select") }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ class_form.department_id.label(class="form-label text-muted small fw-bold") }}
+                            {{ class_form.department_id(class="form-select") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ class_form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </form>
+                    {% endif %}
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Class Name</th>
+                                    <th>Year</th>
+                                    <th>Department</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in classes %}
+                                <tr>
+                                    <td class="fw-bold">{{ c.name }}</td>
+                                    <td><span class="badge bg-info bg-opacity-10 text-info border border-info">{{ c.year
+                                            }} Year</span></td>
+                                    <td>{{ c.department.name }}</td>
+                                    <td class="text-end">
+                                        {% if is_archived %}
+                                        <form action="{{ url_for('admin.restore_academic', type='class', id=c.id) }}"
+                                            method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-success"
+                                                title="Restore"><i class="fas fa-undo"></i></button>
+                                        </form>
+                                        {% else %}
+                                        <form
+                                            action="{{ url_for('admin.admin_academics', tab='classes', delete=c.id) }}"
+                                            method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-light text-danger"
+                                                onclick="return confirm('Are you sure?')" title="Delete"><i
+                                                    class="fas fa-trash-alt"></i></button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No classes found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ================= TAB 4: CLASSROOMS ================= #}
+        <div class="tab-pane fade {% if active_tab == 'classrooms' %}show active{% endif %}" id="pills-room"
+            role="tabpanel">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    {% if not is_archived %}
+                    <form method="POST" action="{{ url_for('admin.admin_academics', tab='classrooms') }}"
+                        class="row g-3 align-items-end mb-4 border-bottom pb-4">
+                        {{ room_form.hidden_tag() }}
+                        <div class="col-md-3">
+                            {{ room_form.room_code.label(class="form-label text-muted small fw-bold") }}
+                            {{ room_form.room_code(class="form-control", placeholder="e.g. 501") }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ room_form.room_type.label(class="form-label text-muted small fw-bold") }}
+                            {{ room_form.room_type(class="form-select") }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ room_form.capacity.label(class="form-label text-muted small fw-bold") }}
+                            {{ room_form.capacity(class="form-control") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ room_form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </form>
+                    {% endif %}
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Room Code</th>
+                                    <th>Type</th>
+                                    <th>Capacity</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in classrooms %}
+                                <tr>
+                                    <td><span
+                                            class="badge bg-primary bg-opacity-10 text-primary border border-primary">{{
+                                            r.room_code }}</span></td>
+                                    <td>{{ r.room_type }}</td>
+                                    <td>{{ r.capacity }} Students</td>
+                                    <td class="text-end">
+                                        {% if is_archived %}
+                                        <form
+                                            action="{{ url_for('admin.restore_academic', type='classroom', id=r.id) }}"
+                                            method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-success"
+                                                title="Restore"><i class="fas fa-undo"></i></button>
+                                        </form>
+                                        {% else %}
+                                        <form
+                                            action="{{ url_for('admin.admin_academics', tab='classrooms', delete=r.id) }}"
+                                            method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-light text-danger"
+                                                onclick="return confirm('Are you sure?')" title="Delete"><i
+                                                    class="fas fa-trash-alt"></i></button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No classrooms found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

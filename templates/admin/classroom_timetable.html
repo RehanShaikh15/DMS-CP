@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Classroom Timetable</h2>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="row align-items-end">
+                        <div class="col-md-4">
+                            {{ render_field(form.classroom_id, class="form-select") }}
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary">View Timetable</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if selected_classroom %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Timetable for {{ selected_classroom.room_code }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Time / Day</th>
+                                {% for time in times %}
+                                <th>{{ time }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in days %}
+                            <tr>
+                                <th class="table-light">{{ day }}</th>
+                                {% for time in times %}
+                                {% set slot = grid[day][time] %}
+                                <td class="{{ 'table-success' if slot else '' }}">
+                                    {% if slot %}
+                                    <strong>{{ slot.subject.subject_name }}</strong><br>
+                                    <small>{{ slot.faculty.name }}</small><br>
+                                    <span class="badge bg-secondary">{{ slot.academic_class.name }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

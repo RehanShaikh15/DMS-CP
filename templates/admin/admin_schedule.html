@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule Center - FMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid pb-5">
+
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="fas fa-calendar-alt me-2"></i>Schedule Center
+            </h2>
+            <p class="text-muted mb-0">Manage timetables, view classroom usage, and monitor daily schedules.</p>
+        </div>
+    </div>
+
+    <!-- TABS NAV -->
+    <ul class="nav nav-pills mb-4 d-flex justify-content-start gap-2" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'manage' %}active{% endif %}" id="pills-manage-tab"
+                data-bs-toggle="pill" data-bs-target="#pills-manage" type="button" role="tab">
+                <i class="fas fa-edit me-2"></i>Timetable Editor
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'classroom' %}active{% endif %}" id="pills-room-tab"
+                data-bs-toggle="pill" data-bs-target="#pills-room" type="button" role="tab">
+                <i class="fas fa-door-open me-2"></i>Classroom Viewer
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'daily' %}active{% endif %}" id="pills-daily-tab"
+                data-bs-toggle="pill" data-bs-target="#pills-daily" type="button" role="tab">
+                <i class="fas fa-calendar-day me-2"></i>Daily Monitor
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+
+        {# ================= TAB 1: MANAGE (Editor) ================= #}
+        <div class="tab-pane fade {% if active_tab == 'manage' %}show active{% endif %}" id="pills-manage"
+            role="tabpanel">
+
+            <!-- Quick Add Form -->
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-light fw-bold py-3 text-primary">
+                    <i class="fas fa-plus-circle me-2"></i>Add Class Slot
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('admin.admin_schedule', tab='manage') }}">
+                        {{ manage_form.hidden_tag() }}
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                {{ manage_form.department_id.label(class="form-label text-muted small fw-bold") }}
+                                {{ manage_form.department_id(class="form-select", id="department") }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ manage_form.faculty_id.label(class="form-label text-muted small fw-bold") }}
+                                {{ manage_form.faculty_id(class="form-select", id="faculty") }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ manage_form.subject_id.label(class="form-label text-muted small fw-bold") }}
+                                {{ manage_form.subject_id(class="form-select", id="subject") }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ manage_form.academic_class_id.label(class="form-label text-muted small fw-bold") }}
+                                {{ manage_form.academic_class_id(class="form-select", id="academic_class") }}
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-3">
+                                {{ manage_form.classroom_id.label(class="form-label text-muted small fw-bold") }}
+                                {{ manage_form.classroom_id(class="form-select") }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ manage_form.day.label(class="form-label text-muted small fw-bold") }}
+                                {{ manage_form.day(class="form-select") }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ manage_form.start_time.label(class="form-label text-muted small fw-bold") }}
+                                {{ manage_form.start_time(class="form-select") }}
+                            </div>
+                            <div class="col-md-3 d-grid align-items-end">
+                                {{ manage_form.submit(class="btn btn-primary fw-bold") }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- WEEKLY GRID -->
+            <div class="card shadow border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center mb-0 align-middle">
+                            <thead class="bg-primary text-white">
+                                <tr>
+                                    <th style="width: 100px;">Time</th>
+                                    {% for day in days %}
+                                    <th>{{ day }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for time in times %}
+                                <tr>
+                                    <th class="align-middle bg-light text-muted">{{ time }}</th>
+                                    {% for day in days %}
+                                    <td class="align-middle p-1">
+                                        {% if manage_grid[day][time] %}
+                                        <div class="p-2 border rounded bg-white shadow-sm position-relative"
+                                            style="min-height: 80px;">
+                                            <div class="fw-bold text-primary mb-1 text-truncate"
+                                                title="{{ manage_grid[day][time].subject.subject_name }}">
+                                                {{ manage_grid[day][time].subject.subject_name }}
+                                            </div>
+                                            <div class="small text-muted mb-1">{{ manage_grid[day][time].faculty.name }}
+                                            </div>
+
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <span class="badge bg-light text-dark border">{{
+                                                    manage_grid[day][time].academic_class.name }}</span>
+                                                <span
+                                                    class="badge bg-info bg-opacity-10 text-info border border-info">{{
+                                                    manage_grid[day][time].classroom.room_code }}</span>
+                                            </div>
+
+                                            <!-- Delete Button -->
+                                            <form
+                                                action="{{ url_for('admin.delete_schedule', id=manage_grid[day][time].id) }}"
+                                                method="POST" class="position-absolute top-0 end-0 m-1"
+                                                onsubmit="return confirm('Are you sure you want to delete this slot?');">
+                                                <button type="submit" class="btn btn-link text-danger p-0"
+                                                    style="font-size: 0.8rem;">
+                                                    <i class="fas fa-times-circle"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% else %}
+                                        <div class="text-muted opacity-25">-</div>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ================= TAB 2: CLASSROOM VIEWER ================= #}
+        <div class="tab-pane fade {% if active_tab == 'classroom' %}show active{% endif %}" id="pills-room"
+            role="tabpanel">
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.admin_schedule', tab='classroom') }}"
+                        class="row align-items-end">
+                        {{ classroom_form.hidden_tag() }}
+                        <div class="col-md-4">
+                            {{ classroom_form.classroom_id.label(class="form-label text-muted small fw-bold") }}
+                            {{ classroom_form.classroom_id(class="form-select") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ classroom_form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if selected_classroom %}
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-door-open me-2"></i>Schedule: <strong>{{
+                            selected_classroom.room_code }}</strong></h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped text-center mb-0">
+                            <thead class="bg-dark text-white">
+                                <tr>
+                                    <th>Time</th>
+                                    {% for day in days %}
+                                    <th>{{ day }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for time in times %}
+                                <tr>
+                                    <th class="align-middle bg-light">{{ time }}</th>
+                                    {% for day in days %}
+                                    <td class="align-middle">
+                                        {% if classroom_grid[day][time] %}
+                                        {% set slot = classroom_grid[day][time] %}
+                                        <div class="p-2 bg-success bg-opacity-10 border border-success rounded">
+                                            <div class="fw-bold text-success small">{{ slot.subject.subject_name }}
+                                            </div>
+                                            <div class="text-secondary small">{{ slot.faculty.name }}</div>
+                                            <div class="badge bg-secondary mt-1">{{ slot.academic_class.name }}</div>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted small opacity-25">-</span>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {# ================= TAB 3: DAILY MONITOR ================= #}
+        <div class="tab-pane fade {% if active_tab == 'daily' %}show active{% endif %}" id="pills-daily"
+            role="tabpanel">
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.admin_schedule', tab='daily') }}"
+                        class="row align-items-end justify-content-center">
+                        {{ daily_form.hidden_tag() }}
+                        <div class="col-md-4">
+                            {{ daily_form.date.label(class="form-label text-muted small fw-bold") }}
+                            {{ daily_form.date(class="form-control") }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ daily_form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if daily_schedule_data %}
+            <div class="card shadow border-0">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-day me-2"></i>Daily Schedule: <span class="text-info">{{ day_name
+                            }}</span> ({{ selected_date }})
+                    </h5>
+                </div>
+
+                {% if calendar_event %}
+                <div
+                    class="alert {% if calendar_event.is_holiday %}alert-danger{% else %}alert-info{% endif %} rounded-0 mb-0 border-0 border-start border-5 {% if calendar_event.is_holiday %}border-danger{% else %}border-info{% endif %}">
+                    <h5 class="alert-heading fw-bold mb-1">
+                        {% if calendar_event.is_holiday %}<i class="fas fa-ban me-2"></i>Holiday{% else %}<i
+                            class="fas fa-info-circle me-2"></i>Event{% endif %}:
+                        {{ calendar_event.description }}
+                    </h5>
+                    {% if calendar_event.is_holiday %}
+                    <p class="mb-0 text-danger-emphasis">Classes and attendance marking are disabled for this date.</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th style="width: 15%">Time</th>
+                                    <th>Classroom</th>
+                                    <th>Subject</th>
+                                    <th>Faculty</th>
+                                    <th>Class</th>
+                                    <th style="width: 15%">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in daily_schedule_data %}
+                                <tr class="{% if item.is_blocked %}table-danger{% endif %}">
+                                    <td class="align-middle fw-bold ps-4">
+                                        {{ item.slot.start_time.strftime('%H:%M') }} - {{
+                                        item.slot.end_time.strftime('%H:%M') }}
+                                    </td>
+                                    <td class="align-middle">
+                                        <span class="badge bg-light text-dark border">{{ item.slot.classroom.room_code
+                                            }}</span>
+                                    </td>
+                                    <td class="align-middle">{{ item.slot.subject.subject_name }}</td>
+                                    <td class="align-middle">{{ item.slot.faculty.name }}</td>
+                                    <td class="align-middle">{{ item.slot.academic_class.name }}</td>
+                                    <td class="align-middle text-center">
+                                        {% if item.is_blocked %}
+                                        <span class="badge bg-danger rounded-pill px-3 py-2">
+                                            <i class="fas fa-user-slash me-1"></i> ON LEAVE
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-success rounded-pill px-3">Active</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // JS for dynamic dropdowns in Manage Tab
+    const dept = document.getElementById("department");
+    const faculty = document.getElementById("faculty");
+    const subject = document.getElementById("subject");
+    const cls = document.getElementById("academic_class");
+
+    function loadDepartmentData(deptId) {
+        if (!deptId) return;
+
+        // 1. Load Faculty & Classes for Department
+        fetch(`/api/department/${deptId}/data`)
+            .then(res => res.json())
+            .then(data => {
+                faculty.innerHTML = "<option value=''>Select Faculty</option>";
+                cls.innerHTML = "<option value=''>Select Class</option>";
+
+                data.faculty.forEach(f => {
+                    faculty.innerHTML += `<option value="${f.id}">${f.name}</option>`;
+                });
+
+                data.classes.forEach(c => {
+                    cls.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                });
+            })
+            .catch(err => console.error("API error:", err));
+    }
+
+    function loadFacultySubjects(facultyId) {
+        if (!facultyId) return;
+
+        fetch(`/api/faculty/${facultyId}/subjects`)
+            .then(res => res.json())
+            .then(data => {
+                subject.innerHTML = "<option value=''>Select Subject</option>";
+
+                data.subjects.forEach(s => {
+                    subject.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                });
+            })
+            .catch(err => console.error("API error:", err));
+    }
+
+    if (dept) {
+        dept.addEventListener("change", function () {
+            loadDepartmentData(this.value);
+        });
+    }
+
+    if (faculty) {
+        faculty.addEventListener("change", function () {
+            loadFacultySubjects(this.value);
+        });
+    }
+</script>
+{% endblock %}

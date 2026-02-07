@@ -5,6 +5,6 @@ def faculty_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         if "faculty_id" not in session:
-            return redirect(url_for("faculty_login"))
+            return redirect(url_for("auth.faculty_login"))
         return view(*args, **kwargs)
     return wrapped

@@ -279,6 +279,16 @@ class DailyScheduleForm(FlaskForm):
     )
     submit = SubmitField("View Schedule")
 
+class AcademicCalendarForm(FlaskForm):
+    date = DateField('Date', validators=[DataRequired()])
+    description = StringField('Description', validators=[DataRequired(), Length(max=200)])
+    type = SelectField('Type', choices=[
+        ('Holiday', 'Holiday'),
+        ('Exam', 'Exam'),
+        ('Event', 'Other Event')
+    ], validators=[DataRequired()])
+    submit = SubmitField('Add Event')
+
 def populate_form_choices():
     """Helper function to populate dynamic choices"""
     departments = Department.query.all()

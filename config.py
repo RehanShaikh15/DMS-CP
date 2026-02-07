@@ -3,6 +3,7 @@ Configuration file for Faculty Management System
 """
 
 import os
+from datetime import timedelta
 
 
 class Config:
@@ -11,6 +12,11 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
+    
+    # Workload Management
+    MAX_WORKLOAD_HOURS = 18
+    MIN_WORKLOAD_HOURS = 10
 
 
 class DevelopmentConfig(Config):
@@ -21,6 +27,12 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///college.db'
 
     SQLALCHEMY_ECHO = True  # Log SQL queries
+
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {
+            "timeout": 30
+        }
+    }
 
 
 class ProductionConfig(Config):

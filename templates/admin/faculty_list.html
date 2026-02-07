@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty List - FMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid pb-5">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                {% if is_archived %}
+                <i class="fas fa-archive me-2"></i>Archived Faculty
+                {% else %}
+                <i class="fas fa-users me-2"></i>Faculty Management
+                {% endif %}
+            </h2>
+            <p class="text-muted mb-0">Manage faculty members, workload, and assignments.</p>
+        </div>
+
+        <div class="btn-group shadow-sm">
+            {% if is_archived %}
+            <a href="{{ url_for('admin.faculty_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Active
+            </a>
+            {% else %}
+            <a href="{{ url_for('admin.export_excel_report') }}" class="btn btn-success">
+                <i class="fas fa-file-excel me-2"></i>Export Excel
+            </a>
+            <a href="{{ url_for('admin.faculty_archived') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-archive me-2"></i>Archived
+            </a>
+            <a href="{{ url_for('admin.faculty_add') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add Faculty
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if faculty_data %}
+    <div class="card shadow border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-nowrap mb-0 align-middle">
+                    <thead class="bg-light text-uppercase text-muted small">
+                        <tr>
+                            <th class="ps-4">Name & Email</th>
+                            <th>Department</th>
+                            <th>Designation</th>
+                            <th>Experience</th>
+                            <th>Workload</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in faculty_data %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3 bg-light-primary text-primary fw-bold d-flex align-items-center justify-content-center"
+                                        style="width: 40px; height: 40px; border-radius: 50%;">
+                                        {{ data.faculty.name[:1] }}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ data.faculty.name }}</h6>
+                                        <small class="text-muted">{{ data.faculty.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ data.faculty.department.name }}</span>
+                            </td>
+                            <td class="text-muted">{{ data.faculty.designation }}</td>
+                            <td>{{ data.faculty.experience_years }} Yrs</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 6px; width: 60px;">
+                                        <div class="progress-bar {% if data.status == 'Overloaded' %}bg-danger{% elif data.status == 'Underutilized' %}bg-warning{% else %}bg-success{% endif %}"
+                                            role="progressbar" style="width: {{ (data.workload / 24) * 100 }}%"></div>
+                                    </div>
+                                    <span class="small fw-bold">{{ data.workload }}h</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if data.status == 'Overloaded' %}
+                                <span class="badge bg-light-danger text-danger border border-danger">Overloaded</span>
+                                {% elif data.status == 'Underutilized' %}
+                                <span
+                                    class="badge bg-light-warning text-warning border border-warning">Underutilized</span>
+                                {% else %}
+                                <span class="badge bg-light-success text-success border border-success">Normal</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{{ url_for('admin.faculty_view', id=data.faculty.id) }}"
+                                        class="btn btn-sm btn-light text-primary" title="View Profile">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    {% if is_archived %}
+                                    <form method="POST"
+                                        action="{{ url_for('admin.faculty_restore', id=data.faculty.id) }}"
+                                        class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-light text-success" title="Restore">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <a href="{{ url_for('admin.faculty_edit', id=data.faculty.id) }}"
+                                        class="btn btn-sm btn-light text-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="POST"
+                                        action="{{ url_for('admin.faculty_delete', id=data.faculty.id) }}"
+                                        class="d-inline"
+                                        onsubmit="return confirm('Are you sure you want to delete {{ data.faculty.name }}?');">
+                                        <button type="submit" class="btn btn-sm btn-light text-danger" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <img src="https://cdni.iconscout.com/illustration/premium/thumb/empty-state-2130362-1800926.png" alt="No Data"
+            style="max-height: 200px; opacity: 0.7;">
+        <h4 class="mt-4 text-muted">No Faculty Members Found</h4>
+        <p class="text-secondary">Get started by adding your first faculty member.</p>
+        <a href="{{ url_for('admin.faculty_add') }}" class="btn btn-primary mt-2">
+            <i class="fas fa-plus me-2"></i>Add Faculty
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

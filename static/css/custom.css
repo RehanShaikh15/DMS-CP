@@ -1,38 +1,212 @@
-/* Custom styles for Faculty Management System */
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-body {
-    background-color: #f8f9fa;
+:root {
+    --primary-color: #2c3e50;
+    /* Deep Slate Blue */
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    /* Bright Blue */
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --light-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-color: #2c3e50;
+    --text-muted: #6c757d;
+    --border-radius: 8px;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--light-bg);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+    box-shadow: var(--shadow-md);
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.nav-link:hover {
+    color: var(--accent-color) !important;
+    transform: translateY(-1px);
+}
+
+/* Cards */
 .card {
     border: none;
-    border-radius: 10px;
+    border-radius: var(--border-radius);
+    background-color: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
 }
 
 .card-header {
-    border-radius: 10px 10px 0 0 !important;
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+/* Tables */
+.table-responsive {
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table {
+    margin-bottom: 0;
+    background-color: white;
+}
+
+.table thead th {
+    background-color: #f1f5f9;
+    color: var(--secondary-color);
+    font-weight: 600;
+    border-bottom: 2px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.table td {
+    vertical-align: middle;
+    color: var(--text-color);
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .table-hover tbody tr:hover {
-    background-color: rgba(0, 123, 255, 0.1);
+    background-color: #f8fafc;
 }
 
-.btn-group-sm > .btn {
-    margin: 0 2px;
+/* Forms */
+.form-control,
+.form-select {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 0.6rem 1rem;
+    box-shadow: none;
+    transition: border-color 0.2s;
 }
 
-.navbar-brand strong {
-    font-size: 1.3rem;
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
 }
 
+/* Alerts */
 .alert {
-    border-radius: 8px;
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
 }
 
-.form-check {
-    padding: 8px 0;
+/* Utilities */
+.shadow-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg) !important;
 }
 
-.form-check:hover {
-    background-color: #f8f9fa;
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Grid & Dashboard specific */
+.stat-card {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background-color: rgba(52, 152, 219, 0.1);
+    color: var(--accent-color);
+    margin-right: 1rem;
+}
+
+.stat-details h3 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.stat-details p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
 }

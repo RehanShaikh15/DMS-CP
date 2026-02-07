@@ -37,6 +37,7 @@ class Department(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
 
     # Relationship
     faculties: Mapped[List["Faculty"]] = relationship(
@@ -57,6 +58,7 @@ class Subject(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     subject_code: Mapped[str] = mapped_column(String(20), nullable=False, unique=True)
     subject_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True)
 
     #Relationships
     faculty_assignments: Mapped[List["FacultySubject"]] = relationship(back_populates="subject", cascade="all, delete-orphan")
@@ -82,6 +84,7 @@ class Faculty(db.Model):
     designation: Mapped[str] = mapped_column(String(50), nullable=False)
     qualification: Mapped[str] = mapped_column(String(100), nullable=False)
     experience_years: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime,server_default=func.now())
     # Relationships
     department: Mapped["Department"] = relationship(back_populates="faculties")
@@ -266,6 +269,7 @@ class AcademicClass(db.Model):
 
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     year: Mapped[int] = mapped_column(nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True)
 
     department_id: Mapped[int] = mapped_column(
         ForeignKey("department.id"),
@@ -287,6 +291,7 @@ class Classroom(db.Model):
     room_code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     room_type: Mapped[str] = mapped_column(String(20), nullable=False)  # Lab / Lecture / Seminar
     capacity: Mapped[int] = mapped_column(nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True)
 
     timetables: Mapped[list["Timetable"]] = relationship(
         back_populates="classroom",
@@ -295,4 +300,19 @@ class Classroom(db.Model):
 
     def __repr__(self):
         return f"<Classroom {self.room_code}>"
+
+
+class AcademicCalendar(db.Model):
+    """Academic Calendar table"""
+    __tablename__ = 'academic_calendar'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    date: Mapped[date] = mapped_column(Date, unique=True, nullable=False)
+    description: Mapped[str] = mapped_column(String(200), nullable=False)
+    is_holiday: Mapped[bool] = mapped_column(default=False)
+    is_exam: Mapped[bool] = mapped_column(default=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False) # Holiday, Exam, Event
+
+    def __repr__(self):
+        return f'<Calendar {self.date}: {self.description}>'
 

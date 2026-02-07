@@ -2,81 +2,94 @@
 REM Faculty Management System - Quick Setup Script for Windows
 
 echo ================================================
-echo Faculty Management System - Quick Setup
+echo Faculty Management System - Setup
 echo ================================================
 echo.
 
-REM Check if Python is installed
+REM 1. Check Python
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Error: Python is not installed
-    echo Please install Python 3.8 or higher from python.org
+    echo Error: Python is not installed or not in PATH.
+    echo Please install Python 3.8+ from python.org
     pause
     exit /b 1
 )
-
-echo Python found
-python --version
+echo Python found.
 echo.
 
-REM Check if pip is installed
-pip --version >nul 2>&1
+REM 2. Setup Virtual Environment
+if not exist ".venv" (
+    echo Creating virtual environment...
+    python -m venv .venv
+    if %errorlevel% neq 0 (
+        echo Failed to create virtual environment.
+        pause
+        exit /b 1
+    )
+) else (
+    echo Virtual environment (.venv) already exists.
+)
+
+REM 3. Activate Virtual Environment
+echo Activating virtual environment...
+call .venv\Scripts\activate
 if %errorlevel% neq 0 (
-    echo Error: pip is not installed
-    echo Please ensure pip is included with your Python installation
+    echo Failed to activate virtual environment.
     pause
     exit /b 1
 )
-
-echo pip found
+echo Virtual environment activated.
 echo.
 
-REM Install dependencies
+REM 4. Install Dependencies
 echo Installing dependencies...
+python -m pip install --upgrade pip
 pip install -r requirements.txt
-
 if %errorlevel% neq 0 (
-    echo Failed to install dependencies
+    echo Failed to install dependencies.
     pause
     exit /b 1
 )
-
-echo Dependencies installed successfully
+echo Dependencies installed.
 echo.
 
-REM Initialize database
+REM 5. Initialize Database
 echo Initializing database...
-flask --app app init-db
-
+set FLASK_APP=app
+python -m flask init-db
 if %errorlevel% neq 0 (
-    echo Failed to initialize database
+    echo Failed to initialize database.
     pause
     exit /b 1
 )
-
-echo Database initialized successfully
+echo Database initialized.
 echo.
 
-REM Seed database
-echo Seeding database with sample data...
-flask --app app seed-db
+REM 6. Seed Database
+echo Seeding database...
+python -m flask seed-db
+echo.
 
-if %errorlevel% neq 0 (
-    echo Warning: Failed to seed database (this is optional)
+REM 7. Create Admin User (Optional)
+echo ================================================
+echo               ADMIN USER SETUP
+echo ================================================
+set /p create_admin="Do you want to create an Admin user now? (Y/N): "
+if /i "%create_admin%"=="Y" (
+    echo.
+    echo Running Admin Creation Wizard...
+    python -m flask create-admin
+) else (
+    echo Skipping admin creation. You can run 'flask create-admin' later.
 )
-
 echo.
+
 echo ================================================
 echo Setup Complete!
 echo ================================================
 echo.
-echo To start the application, run:
-echo   python app.py
+echo To start the application:
+echo 1. .venv\Scripts\activate
+echo 2. python app.py
 echo.
-echo Or using Flask CLI:
-echo   flask --app app run --debug
-echo.
-echo Then open your browser to: http://127.0.0.1:5000
-echo.
-echo ================================================
 pause

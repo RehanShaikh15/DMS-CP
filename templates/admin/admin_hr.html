@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}HR Center - FMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid pb-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-primary"><i class="fas fa-users-cog me-2"></i>Faculty HR Center</h2>
+            <p class="text-muted">Manage faculty attendance and leave requests.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <!-- TABS NAV -->
+            <ul class="nav nav-pills nav-fill mb-4 bg-white shadow-sm p-2 rounded" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold {% if active_tab == 'attendance' %}active{% endif %}"
+                        id="pills-attendance-tab" data-bs-toggle="pill" data-bs-target="#pills-attendance" type="button"
+                        role="tab">
+                        <i class="fas fa-clipboard-check me-2"></i>Attendance Manager
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold {% if active_tab == 'leaves' %}active{% endif %}"
+                        id="pills-leaves-tab" data-bs-toggle="pill" data-bs-target="#pills-leaves" type="button"
+                        role="tab">
+                        <i class="fas fa-envelope-open-text me-2"></i>Leave Requests
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="pills-tabContent">
+
+                {# ================= TAB 1: ATTENDANCE MANAGER ================= #}
+                <div class="tab-pane fade {% if active_tab == 'attendance' %}show active{% endif %}"
+                    id="pills-attendance" role="tabpanel">
+
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card shadow border-0 h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0 fw-bold"><i class="fas fa-filter me-2"></i>Select Department & Date
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" action="{{ url_for('admin.admin_hr', tab='attendance') }}">
+                                        {{ attendance_form.hidden_tag() }}
+
+                                        <div class="mb-3">
+                                            {{ attendance_form.department_id.label(class="form-label fw-bold text-muted
+                                            small") }}
+                                            {{ attendance_form.department_id(class="form-select") }}
+                                        </div>
+
+                                        <div class="mb-4">
+                                            {{ attendance_form.date.label(class="form-label fw-bold text-muted small")
+                                            }}
+                                            {{ attendance_form.date(class="form-control") }}
+                                        </div>
+
+                                        {{ attendance_form.submit(class="btn btn-primary w-100 fw-bold") }}
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8 mb-4">
+                            {% if faculty_list %}
+                            <div class="card shadow border-0">
+                                <div
+                                    class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0 fw-bold"><i class="fas fa-user-check me-2"></i>Mark Attendance</h5>
+                                    <span class="badge bg-light text-dark">{{ attendance_form.date.data }}</span>
+                                </div>
+                                <div class="card-body p-0">
+                                    <form method="post" action="{{ url_for('admin.save_attendance') }}">
+                                        <input type="hidden" name="date" value="{{ attendance_form.date.data }}">
+
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-striped mb-0 align-middle">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-4">Faculty Name</th>
+                                                        <th style="width: 200px;">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for f in faculty_list %}
+                                                    <tr>
+                                                        <td class="ps-4 fw-bold">{{ f.name }}</td>
+                                                        <td>
+                                                            <div class="input-group input-group-sm">
+                                                                <span class="input-group-text"><i
+                                                                        class="fas fa-toggle-on"></i></span>
+                                                                <select name="status_{{ f.id }}" class="form-select">
+                                                                    {% set r = existing_attendance.get(f.id) %}
+                                                                    <option value="Present" {{ 'selected' if r and
+                                                                        r.status=='Present' }}>Present</option>
+                                                                    <option value="Absent" {{ 'selected' if r and
+                                                                        r.status=='Absent' }}>Absent</option>
+                                                                    <option value="Leave" {{ 'selected' if r and
+                                                                        r.status=='Leave' }}>Leave</option>
+                                                                </select>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="p-3 bg-light border-top">
+                                            <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm">
+                                                <i class="fas fa-save me-2"></i>Save Attendance Records
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info shadow-sm">
+                                <i class="fas fa-info-circle me-2"></i>Please select a department and date to load
+                                faculty list.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {# ================= TAB 2: LEAVE REQUESTS ================= #}
+                <div class="tab-pane fade {% if active_tab == 'leaves' %}show active{% endif %}" id="pills-leaves"
+                    role="tabpanel">
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-white py-3 border-0">
+                            <h5 class="mb-0 fw-bold text-primary"><i class="fas fa-history me-2"></i>Leave Requests &
+                                History</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light text-uppercase small text-muted">
+                                        <tr>
+                                            <th class="ps-4">Faculty</th>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Reason</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-end pe-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for leave in leaves %}
+                                        <tr>
+                                            <td class="ps-4 fw-bold text-primary">{{ leave.faculty.name }}</td>
+                                            <td>{{ leave.start_date }}</td>
+                                            <td>{{ leave.end_date }}</td>
+                                            <td><small class="text-muted">{{ leave.reason }}</small></td>
+                                            <td class="text-center">
+                                                {% if leave.status == "Pending" %}
+                                                <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                                                {% elif leave.status == "Approved" %}
+                                                <span class="badge bg-success rounded-pill">Approved</span>
+                                                {% else %}
+                                                <span class="badge bg-danger rounded-pill">Rejected</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                {% if leave.status == "Pending" %}
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ url_for('admin.approve_leave', leave_id=leave.id) }}"
+                                                        class="btn btn-success" title="Approve">
+                                                        <i class="fas fa-check"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('admin.reject_leave', leave_id=leave.id) }}"
+                                                        class="btn btn-danger" title="Reject">
+                                                        <i class="fas fa-times"></i>
+                                                    </a>
+                                                </div>
+                                                {% else %}
+                                                <span class="text-muted small"><i class="fas fa-lock"></i></span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-5">
+                                                <i class="fas fa-inbox fa-3x mb-3 text-light"></i>
+                                                <p>No leave requests found</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
